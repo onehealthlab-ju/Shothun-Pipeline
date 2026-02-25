@@ -1,0 +1,88 @@
+name: sm-pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  # Core Python environment
+  - python=3.10
+
+  # QC and preprocessing tools
+  - fastqc                    # Quality control for raw reads
+  - multiqc                   # Aggregate QC reports
+  - fastp                     # Fast preprocessing (trimming, filtering, QC)
+  - trimmomatic               # Alternative read trimming
+  - bbmap                     # BBTools suite (decontamination, normalization)
+  
+  # Host/contaminant removal
+  - bowtie2                   # Fast read alignment (for host filtering)
+  - samtools                  # SAM/BAM manipulation
+  - bedtools                  # Genomic interval operations
+  
+  # Taxonomic profiling (read-based)
+  - kraken2                   # Fast k-mer based taxonomic classification
+  - bracken                   # Bayesian refinement of Kraken2 results
+  - metaphlan                 # Marker gene-based profiling
+  - kaiju                     # Protein-level taxonomic classification
+  
+  # Functional profiling
+  - humann                    # HUMAnN3 for functional profiling
+  - diamond                   # Fast protein aligner (used by HUMAnN)
+  
+  # Assembly tools
+  - megahit                   # Fast, memory-efficient metagenome assembler
+  - spades                    # SPAdes metagenomic assembler (metaSPAdes)
+  - quast                     # Assembly quality assessment
+  
+  # Binning tools
+  - metabat2                  # Depth-based binning
+  - maxbin2                   # Alternative binning tool
+  - concoct                   # Compositional binning
+  - das_tool                  # Bin refinement and aggregation
+  
+  # Bin quality assessment
+  - checkm-genome             # Completeness and contamination checking
+  - gtdbtk                    # Taxonomic classification using GTDB
+  
+  # Gene prediction and annotation
+  - prodigal                  # Gene prediction for prokaryotes
+  - prokka                    # Rapid prokaryotic genome annotation
+  - eggnog-mapper             # Functional annotation using eggNOG database
+  
+  # Alignment and mapping
+  - bwa                       # Burrows-Wheeler Aligner
+  - minimap2                  # Long-read and assembly alignment
+  
+  # Visualization and statistics
+  - krona                     # Interactive taxonomic visualization
+  - seqtk                     # Sequence toolkit
+  - pigz                      # Parallel gzip for compression
+  
+  # Utilities
+  - wget
+  - curl
+  - unzip
+  - parallel                  # GNU parallel for job parallelization
+  
+  # R environment for downstream analysis
+  - r-base=4.3
+  - bioconductor-phyloseq     # Microbiome data handling
+  - r-ggplot2                 # Plotting
+  - r-tidyverse               # Data manipulation
+  - r-vegan                   # Ecological statistics
+  - r-pheatmap                # Heatmap visualization
+  - bioconductor-deseq2       # Differential abundance analysis
+  
+  # Python packages
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - seaborn
+  - biopython
+  - pysam                     # Python SAM/BAM interface
+  - pip:
+      - pandas
+      - scikit-learn
+      - umap-learn            # Dimensionality reduction

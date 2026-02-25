@@ -1,0 +1,297 @@
+================================================================================
+SHOTGUN METAGENOMICS PIPELINE - EXECUTION GUIDE
+================================================================================
+
+📦 PACKAGE CONTENTS (8 files)
+================================================================================
+
+1. environment.yml                      Conda environment definition
+2. setup_pipeline.sh                    Database setup script
+3. test_pipeline.sh                     Test/verification script  
+4. run_metagenomics_pipeline.sh        Main pipeline (single sample)
+5. run_batch_samples.sh                Batch processing script
+6. samples_list_template.txt           Template for batch input
+7. README_QUICKSTART.md                Detailed documentation
+8. PIPELINE_OVERVIEW.md                This overview guide
+
+Total: ~2,600 lines of production-ready code
+
+================================================================================
+🚀 EXECUTION WORKFLOW
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          FIRST TIME SETUP                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Step 1: Setup Environment (ONE TIME ONLY)
+┌──────────────────────────────────────────┐
+│  bash setup_pipeline.sh                  │  ⏱️  2-6 hours
+│                                          │  💾  50-150 GB
+│  → Creates conda environment             │
+│  → Downloads databases (interactive)     │
+│  → Verifies installations                │
+│  → Creates config file                   │
+└──────────────────────────────────────────┘
+            ↓
+Step 2: Test Installation (RECOMMENDED)
+┌──────────────────────────────────────────┐
+│  bash test_pipeline.sh                   │  ⏱️  5-10 minutes
+│                                          │  💾  <1 GB
+│  → Downloads test data                   │
+│  → Runs core pipeline steps              │
+│  → Validates outputs                     │
+│  → Generates test report                 │
+└──────────────────────────────────────────┘
+            ↓
+        ✅ READY TO USE!
+
+================================================================================
+📊 RUNNING THE PIPELINE
+================================================================================
+
+Option A: SINGLE SAMPLE
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  1. Prepare Data                                                            │
+│     mkdir -p rawdata                                                        │
+│     # Copy your files: sample01_R1.fastq.gz, sample01_R2.fastq.gz          │
+│                                                                             │
+│  2. Configure Pipeline                                                      │
+│     nano run_metagenomics_pipeline.sh                                       │
+│     # Edit lines 20-50:                                                     │
+│     #   - SAMPLE_ID                                                         │
+│     #   - Database paths                                                    │
+│     #   - THREADS, MEMORY                                                   │
+│                                                                             │
+│  3. Activate Environment                                                    │
+│     conda activate shotgun-metagenomics-pipeline                            │
+│                                                                             │
+│  4. Run Pipeline                                                            │
+│     bash run_metagenomics_pipeline.sh                                       │
+│     ⏱️  6-12 hours (depends on data size and resources)                     │
+│                                                                             │
+│  5. View Results                                                            │
+│     firefox results/visualization/sample01_multiqc_report.html              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+Option B: BATCH PROCESSING (Multiple Samples)
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│  1. Create Sample List                                                      │
+│     cp samples_list_template.txt my_samples.txt                             │
+│     nano my_samples.txt                                                     │
+│     # Add samples (tab-separated):                                          │
+│     # sample01<TAB>rawdata/s01_R1.fq.gz<TAB>rawdata/s01_R2.fq.gz           │
+│     # sample02<TAB>rawdata/s02_R1.fq.gz<TAB>rawdata/s02_R2.fq.gz           │
+│                                                                             │
+│  2. Configure Batch Script                                                  │
+│     nano run_batch_samples.sh                                               │
+│     # Edit database paths (lines 40-50)                                     │
+│                                                                             │
+│  3. Run Batch Processing                                                    │
+│     bash run_batch_samples.sh my_samples.txt                                │
+│     ⏱️  N × (6-12 hours) where N = number of samples                        │
+│                                                                             │
+│  4. View Batch Summary                                                      │
+│     cat batch_results_*/batch_summary.txt                                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+📁 OUTPUT STRUCTURE
+================================================================================
+
+results/
+├── qc/                              FastQC reports
+├── preprocessing/                   Clean, filtered reads
+├── taxonomic_profiling/             Species abundances
+│   ├── *.kraken2.report            Kraken2 taxonomy
+│   ├── *.bracken.species           Refined abundances  
+│   └── *.metaphlan.profile.txt     MetaPhlAn profile
+├── functional_profiling/            Metabolic pathways
+│   ├── *_genefamilies_relab.tsv    Gene families
+│   └── *_pathabundance_relab.tsv   Pathway abundances
+├── assembly/                        Assembled contigs
+│   ├── *_contigs.fa                Final assembly
+│   └── *_quast/                    Quality metrics
+├── binning/                         Genome bins (MAGs)
+│   ├── *_bin.*.fa                  Individual bins
+│   └── *_checkm_results.txt        Quality assessment
+├── annotation/                      Gene predictions
+│   ├── *_proteins.faa              Protein sequences
+│   └── *_eggnog.emapper.*          Functional annotations
+├── visualization/                   Reports and charts
+│   ├── *_multiqc_report.html      ⭐ START HERE!
+│   └── *_krona.html                Interactive taxonomy
+└── *_pipeline_summary.txt          Overall summary
+
+================================================================================
+⚙️  SYSTEM REQUIREMENTS
+================================================================================
+
+MINIMUM                              RECOMMENDED
+────────────────────────────────    ────────────────────────────────
+CPU:     8 cores                    CPU:     16-32 cores
+RAM:     32 GB                      RAM:     64-128 GB
+Storage: 100 GB                     Storage: 500 GB (SSD)
+Runtime: 12-24 hours/sample         Runtime: 3-6 hours/sample
+
+================================================================================
+🔍 PIPELINE STEPS BREAKDOWN
+================================================================================
+
+ Step │ Tool(s)              │ Purpose                        │ Time (16 cores)
+──────┼──────────────────────┼────────────────────────────────┼─────────────────
+  1   │ FastQC               │ Quality control                │   5-10 min
+  2   │ fastp                │ Trim & filter reads            │  10-15 min
+  3   │ Bowtie2              │ Remove host DNA                │  15-30 min
+  4   │ Kraken2 + Bracken    │ Taxonomic classification       │  20-40 min
+  5   │ MetaPhlAn            │ Marker-based profiling         │  30-60 min
+  6   │ HUMAnN3              │ Functional profiling           │   1-2 hours
+  7   │ MEGAHIT              │ Assemble metagenome            │   2-4 hours
+  8   │ QUAST                │ Assembly QC                    │   5-10 min
+  9   │ Bowtie2 + samtools   │ Map reads to contigs           │  30-60 min
+ 10   │ MetaBAT2 + MaxBin2   │ Bin contigs into MAGs          │   1-2 hours
+ 11   │ CheckM               │ Assess MAG quality             │   1-2 hours
+ 12   │ Prodigal             │ Predict genes                  │  10-30 min
+ 13   │ eggNOG-mapper        │ Annotate gene functions        │   1-2 hours
+ 14   │ Krona                │ Taxonomic visualization        │   2-5 min
+ 15   │ MultiQC              │ Aggregate QC reports           │   2-5 min
+──────┴──────────────────────┴────────────────────────────────┴─────────────────
+                                                    TOTAL: ~6-12 hours/sample
+
+================================================================================
+💡 TIPS FOR SUCCESS
+================================================================================
+
+✅ DO:
+  • Run test_pipeline.sh before processing real data
+  • Start with Kraken2 Standard database (smaller, faster)
+  • Check MultiQC report first for quality overview
+  • Keep raw data backed up separately
+  • Use SSD for better I/O performance
+  • Process samples in batches for efficiency
+
+❌ DON'T:
+  • Run multiple samples simultaneously (unless you have resources)
+  • Skip quality control steps
+  • Delete intermediate files until analysis complete
+  • Ignore failed QC metrics
+  • Use insufficient memory (causes crashes)
+
+================================================================================
+🐛 QUICK TROUBLESHOOTING
+================================================================================
+
+Problem: Command not found
+Solution: conda activate shotgun-metagenomics-pipeline
+
+Problem: Out of memory
+Solution: Reduce THREADS or increase RAM allocation
+
+Problem: Database not found  
+Solution: Check paths in configuration match setup_pipeline.sh output
+
+Problem: Slow performance
+Solution: Increase THREADS, use SSD, or use smaller databases
+
+Problem: Pipeline stops
+Solution: Check log file: cat results/pipeline_*.log | grep -i error
+
+================================================================================
+📊 INTERPRETING RESULTS
+================================================================================
+
+KEY FILES TO CHECK:
+
+1️⃣  results/visualization/sample_multiqc_report.html
+    ↳ Overall QC summary - CHECK THIS FIRST!
+    ↳ Read quality, preprocessing stats, assembly metrics
+
+2️⃣  results/taxonomic_profiling/sample.kraken2.report
+    ↳ Which species are present?
+    ↳ What are their relative abundances?
+
+3️⃣  results/functional_profiling/sample_pathabundance_relab.tsv
+    ↳ Which metabolic pathways are active?
+    ↳ What functions are enriched?
+
+4️⃣  results/binning/sample_checkm_results.txt
+    ↳ How many high-quality MAGs recovered?
+    ↳ Completeness and contamination scores
+
+5️⃣  results/visualization/sample_krona.html
+    ↳ Interactive taxonomic tree
+    ↳ Visual exploration of community composition
+
+================================================================================
+📚 ADDITIONAL RESOURCES
+================================================================================
+
+Documentation:     README_QUICKSTART.md (detailed usage guide)
+Overview:          PIPELINE_OVERVIEW.md (this file)
+Sample List:       samples_list_template.txt
+Log Files:         results/pipeline_*.log
+Configuration:     pipeline_config.txt (created by setup script)
+
+Tool Manuals:
+  FastQC:          fastqc --help
+  Kraken2:         kraken2 --help
+  MetaPhlAn:       metaphlan --help
+  HUMAnN:          humann --help
+  MEGAHIT:         megahit --help
+  CheckM:          checkm -h
+
+================================================================================
+✅ PRE-FLIGHT CHECKLIST
+================================================================================
+
+Before running the pipeline, verify:
+
+□ Conda environment created and activated
+□ At least one database downloaded (Kraken2 minimum)
+□ Test pipeline passed successfully
+□ Input FASTQ files exist and are valid
+□ Configuration edited with correct paths
+□ Sufficient disk space available (>100 GB free)
+□ Sufficient RAM available (>32 GB)
+□ No other resource-intensive processes running
+
+================================================================================
+🎯 QUICK START COMMANDS
+================================================================================
+
+# Complete workflow from scratch:
+
+# 1. First time setup (once)
+bash setup_pipeline.sh
+
+# 2. Test installation (once)  
+bash test_pipeline.sh
+
+# 3. Process single sample
+conda activate shotgun-metagenomics-pipeline
+bash run_metagenomics_pipeline.sh
+
+# 4. OR process multiple samples
+bash run_batch_samples.sh my_samples.txt
+
+# 5. View results
+firefox results/visualization/*_multiqc_report.html
+
+================================================================================
+🎉 YOU'RE READY TO GO!
+================================================================================
+
+This pipeline provides a complete, production-ready workflow for shotgun
+metagenomics analysis. All major analysis steps are automated with robust
+error handling and comprehensive reporting.
+
+For detailed information, see README_QUICKSTART.md
+
+Good luck with your metagenomics research! 🧬
+
+================================================================================
